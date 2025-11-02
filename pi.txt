@@ -1,0 +1,1 @@
+{"destination":"/pay-request","contact":{"public_key":"GCO6ZZNATTBEW4ZUWKTH5EB4MKGG7PQC4ZMDR4WPTONDYIK2SRZNTKJV"}}

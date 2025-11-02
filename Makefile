@@ -9,3 +9,6 @@ all: octocat-qrcode.svg
 	$(PYLINT) $<
 pylint: $(SCRIPTS)
 	$(foreach script, $+, $(MAKE) $(script:.py=).pylint)
+push:
+	$(foreach remote, $(filter-out original, $(shell git remote)), \
+	  git push $(remote);)
