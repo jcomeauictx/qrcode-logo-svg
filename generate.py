@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 import math, sys, os, logging  # pylint: disable=multiple-imports
 from lxml import etree
