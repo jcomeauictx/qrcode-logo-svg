@@ -1,19 +1,26 @@
-QR Code SVG Logo Generator
+#QR Code SVG Logo Generator
 ==========================
-Generate QR codes with your logo in the middle.
+generate QR codes with your logo in the middle.
 
-![Example Code](http://ddrboxman.github.com/QR-Code-SVG-Logo-Generator/sample.png)
+![example code](http://ddrboxman.github.com/QR-Code-SVG-Logo-Generator/sample.png)
 
-Logo should be a svg file, the output QR code is also an SVG
+logo should be a svg file, the output QR code is also an SVG
 
-Simply pass the svg file containing the logo, the url you want on the QR code, and the output filename
+simply pass the svg file containing the logo, the url you want on the QR code, and the output filename
 
 ```
-./generate.py ./octocat.svg "http://github.com" ./octocatqr.svg
+./generate.py octocat.svg "https://github.com/" octocatqr.svg
 ```
 
-Dependencies
+alternatively, make .svg and .link files for each QR code you want to generate
+in this directory, and simple `make` to build them. the resulting svg file
+will be of the form [PREFIX]-qrcode.svg.
+
+## dependencies
 ------------
 Python modules:
 
 PIL (Python Imaging Library)
+
+## attributions
+* [Pi logo](https://seeklogo.com/vector-logo/440686/pi-network-lvquy)
