@@ -5,8 +5,8 @@ from lxml import etree
 import pyqrcode
 logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
 
-block_size = 10
-circle_radius = block_size * 4
+BLOCKSIZE = 10
+RADIUS = BLOCKSIZE * 4
 
 def distance(p0, p1):
     return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
@@ -28,7 +28,7 @@ def getSVGFileContent(filename):
     logging.debug('svg: %s', svg)
     return svg
 
-def touchesBounds(center, x, y, radius, block_size):
+def touchesBounds(center, x, y, radius=RADIUS, block_size=BLOCKSIZE):
     scaled_center = center / block_size
     dis = distance((scaled_center , scaled_center), (x, y))
     rad = radius / block_size
@@ -51,14 +51,14 @@ else:
 
 im = generateQRImageForUrl(url);
 
-imageSize = str(im.size[0] * block_size)
+imageSize = str(im.size[0] * BLOCKSIZE)
 
 # create an SVG XML element (see the SVG specification for attribute details)
 doc = etree.Element('svg', width=imageSize, height=imageSize, version='1.1', xmlns='http://www.w3.org/2000/svg')
 
 pix = im.load()
 
-center = im.size[0] * block_size / 2
+center = im.size[0] * BLOCKSIZE / 2
 
 for xPos in range(0,im.size[0]):
     for yPos in range(0, im.size[1]):
@@ -66,10 +66,10 @@ for xPos in range(0,im.size[0]):
         color = pix[xPos, yPos]
         if color == (0,0,0,255):
 
-            withinBounds = not touchesBounds(center, xPos, yPos, circle_radius, block_size)
+            withinBounds = not touchesBounds(center, xPos, yPos, RADIUS, BLOCKSIZE)
 
             if (withinBounds):
-                etree.SubElement(doc, 'rect', x=str(xPos*block_size), y=str(yPos*block_size), width='10', height='10', fill='black')
+                etree.SubElement(doc, 'rect', x=str(xPos*BLOCKSIZE), y=str(yPos*BLOCKSIZE), width='10', height='10', fill='black')
 
 logo = getSVGFileContent(logoPath)
 
@@ -87,12 +87,12 @@ else :
 dim = height
 if (width > dim):
     dim = width
-scale = circle_radius * 2.0 / width
+scale = RADIUS * 2.0 / width
 
 scale_str = "scale(" + str(scale) + ")"
 
-xTrans = ((im.size[0] * block_size) - (width * scale)) / 2.0
-yTrans = ((im.size[1] * block_size) - (height * scale)) / 2.0
+xTrans = ((im.size[0] * BLOCKSIZE) - (width * scale)) / 2.0
+yTrans = ((im.size[1] * BLOCKSIZE) - (height * scale)) / 2.0
 
 translate = "translate(" + str(xTrans) + " " + str(yTrans) + ")"
 
