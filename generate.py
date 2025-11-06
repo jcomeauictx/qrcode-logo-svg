@@ -9,13 +9,16 @@ BLOCKSIZE = 10
 RADIUS = BLOCKSIZE * 4
 
 def distance(p0, p1):
-    return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
+    result = math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
+    logging.debug('distance between %r and %r: %s', p0, p1, result)
+    return result
 
 def generate_qr_code(url):
+    logging.debug('generating QR code for "%s" without icon', url)
     qr_image = pyqrcode.MakeQRImage(
         url,
-        errorCorrectLevel = pyqrcode.QRErrorCorrectLevel.H,
-        block_in_pixels = 1,
+        errorCorrectLevel=pyqrcode.QRErrorCorrectLevel.H,
+        block_in_pixels=1,
         border_in_blocks=0
     )
     return qr_image
@@ -39,84 +42,70 @@ def touches_bounds(center, x, y, radius=RADIUS, block_size=BLOCKSIZE):
     rad = radius / block_size
     return dis <= rad + 1	
 
-if len(sys.argv) < 3:
-    print("Incorrect args, try:")
-    print('./generate.py ./octocat.svg "http://github.com" ./out.svg')
-    sys.exit(0)
+def qr_code_with_logo(logo_path, url, outfile_name=None):
+    '''
+    generate QR code with logo included
+    '''
+    if os.path.exists(url):
+        with open(url, encoding='utf-8') as infile:
+            url = infile.read().rstrip()
+    if outfile_name is None:
+        outfile_name = os.path.splitext(logo_path)[0] + '-qrcode.svg'
+    logging.debug('generating QR code logo file "%s" and url "%s"',
+                  logo_path, url)
+    im = generate_qr_code(url);
+    imageSize = str(im.size[0] * BLOCKSIZE)
+    # create an SVG XML element (see the SVG specification for attribute details)
+    doc = etree.Element('svg', width=imageSize, height=imageSize, version='1.1', xmlns='http://www.w3.org/2000/svg')
+    pix = im.load()
+    center = im.size[0] * BLOCKSIZE / 2
+    for xPos in range(0,im.size[0]):
+        for yPos in range(0, im.size[1]):
+            color = pix[xPos, yPos]
+            if color == (0,0,0,255):
+                within_bounds = not touches_bounds(
+                    center,
+                    xPos,
+                    yPos,
+                    RADIUS,
+                    BLOCKSIZE
+                )
+                if (within_bounds):
+                    etree.SubElement(doc, 'rect', x=str(xPos*BLOCKSIZE), y=str(yPos*BLOCKSIZE), width='10', height='10', fill='black')
+    logo = get_svg_content(logo_path)
+    test = str(logo.get("viewBox"))
+    Array = []
+    if (test != "None"):
+        Array = test.split(" ")
+        width = float(Array[2])
+        height = float(Array[3])
+    else :
+        width = float(str(logo.get("width")).replace("px", ""))
+        height = float(str(logo.get("height")).replace("px", ""))
+    dim = height
+    if (width > dim):
+        dim = width
+    scale = RADIUS * 2.0 / width
+    scale_str = "scale(" + str(scale) + ")"
+    xTrans = ((im.size[0] * BLOCKSIZE) - (width * scale)) / 2.0
+    yTrans = ((im.size[1] * BLOCKSIZE) - (height * scale)) / 2.0
+    translate = 'translate(%s %s)' % (xTrans, yTrans)
+    logo_scale_container = etree.SubElement(doc, 'g', transform=translate + " " + scale_str)
+    for element in logo.getchildren():
+        logo_scale_container.append(element)
+    # ElementTree 1.2 doesn't write the SVG file header errata, so do that manually
+    f = open(outfile_name, 'wb')
+    f.write(b'<?xml version="1.0" standalone="no"?>\n')
+    f.write(b'<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n')
+    f.write(b'"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n')
+    f.write(etree.tostring(doc))
+    f.close()
 
-logo_path = sys.argv[1]
-url = sys.argv[2]
-if os.path.exists(url):
-    with open(url, encoding='utf-8') as infile:
-        url = infile.read().rstrip()
-if len(sys.argv) < 4:
-    outputname = os.path.splitext(logo_path)[0] + '-qrcode.svg'
-else:
-    outputname = sys.argv[3]
-
-im = generate_qr_code(url);
-
-imageSize = str(im.size[0] * BLOCKSIZE)
-
-# create an SVG XML element (see the SVG specification for attribute details)
-doc = etree.Element('svg', width=imageSize, height=imageSize, version='1.1', xmlns='http://www.w3.org/2000/svg')
-
-pix = im.load()
-
-center = im.size[0] * BLOCKSIZE / 2
-
-for xPos in range(0,im.size[0]):
-    for yPos in range(0, im.size[1]):
-
-        color = pix[xPos, yPos]
-        if color == (0,0,0,255):
-
-            within_bounds = not touches_bounds(
-                center,
-                xPos,
-                yPos,
-                RADIUS,
-                BLOCKSIZE
-            )
-
-            if (within_bounds):
-                etree.SubElement(doc, 'rect', x=str(xPos*BLOCKSIZE), y=str(yPos*BLOCKSIZE), width='10', height='10', fill='black')
-
-logo = get_svg_content(logo_path)
-
-test = str(logo.get("viewBox"))
-Array = []
-
-if (test != "None"):
-    Array = test.split(" ")
-    width = float(Array[2])
-    height = float(Array[3])
-else :
-    width = float(str(logo.get("width")).replace("px", ""))
-    height = float(str(logo.get("height")).replace("px", ""))
-
-dim = height
-if (width > dim):
-    dim = width
-scale = RADIUS * 2.0 / width
-
-scale_str = "scale(" + str(scale) + ")"
-
-xTrans = ((im.size[0] * BLOCKSIZE) - (width * scale)) / 2.0
-yTrans = ((im.size[1] * BLOCKSIZE) - (height * scale)) / 2.0
-
-translate = "translate(" + str(xTrans) + " " + str(yTrans) + ")"
-
-logo_scale_container = etree.SubElement(doc, 'g', transform=translate + " " + scale_str)
-
-for element in logo.getchildren():
-    logo_scale_container.append(element)
-
-
-# ElementTree 1.2 doesn't write the SVG file header errata, so do that manually
-f = open(outputname, 'wb')
-f.write(b'<?xml version="1.0" standalone="no"?>\n')
-f.write(b'<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n')
-f.write(b'"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n')
-f.write(etree.tostring(doc))
-f.close()
+if __name__ == '__main__':
+    if len(sys.argv) >= 3:
+        qr_code_with_logo(*sys.argv[1:])
+    else:
+        logging.error(
+            'usage: %s octocat.svg "https://github.com/" [github-qrcode.svg]',
+            sys.argv[0]
+        )
