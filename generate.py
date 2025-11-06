@@ -63,11 +63,11 @@ def qr_code_with_logo(logo_path, url, outfile_name=None):
         version='1.1',
         xmlns='http://www.w3.org/2000/svg'
     )
-    pix = im.load()
+    pixels = im.load()
     center = im.size[0] * BLOCKSIZE / 2
     for x_position in range(0,im.size[0]):
         for y_position in range(0, im.size[1]):
-            color = pix[x_position, y_position]
+            color = pixels[x_position, y_position]
             if color == (0,0,0,255):
                 within_bounds = not touches_bounds(
                     center,
@@ -80,11 +80,11 @@ def qr_code_with_logo(logo_path, url, outfile_name=None):
                     etree.SubElement(doc, 'rect', x=str(x_position*BLOCKSIZE), y=str(y_position*BLOCKSIZE), width='10', height='10', fill='black')
     logo = get_svg_content(logo_path)
     test = str(logo.get("viewBox"))
-    Array = []
+    array = []
     if (test != "None"):
-        Array = test.split(" ")
-        width = float(Array[2])
-        height = float(Array[3])
+        array = test.split(" ")
+        width = float(array[2])
+        height = float(array[3])
     else :
         width = float(str(logo.get("width")).replace("px", ""))
         height = float(str(logo.get("height")).replace("px", ""))
