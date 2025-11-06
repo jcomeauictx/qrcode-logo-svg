@@ -11,11 +11,16 @@ RADIUS = BLOCKSIZE * 4
 def distance(p0, p1):
     return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
 
-def generateQRImageForUrl(url):
-    qr_image = pyqrcode.MakeQRImage(url, errorCorrectLevel = pyqrcode.QRErrorCorrectLevel.H, block_in_pixels = 1, border_in_blocks=0)
+def generate_qr_code(url):
+    qr_image = pyqrcode.MakeQRImage(
+        url,
+        errorCorrectLevel = pyqrcode.QRErrorCorrectLevel.H,
+        block_in_pixels = 1,
+        border_in_blocks=0
+    )
     return qr_image
 
-def getSVGFileContent(filename):
+def get_svg_content(filename):
     '''
     root may be the svg element itself, so search from tree
 
@@ -28,7 +33,7 @@ def getSVGFileContent(filename):
     logging.debug('svg: %s', svg)
     return svg
 
-def touchesBounds(center, x, y, radius=RADIUS, block_size=BLOCKSIZE):
+def touches_bounds(center, x, y, radius=RADIUS, block_size=BLOCKSIZE):
     scaled_center = center / block_size
     dis = distance((scaled_center , scaled_center), (x, y))
     rad = radius / block_size
@@ -39,17 +44,17 @@ if len(sys.argv) < 3:
     print('./generate.py ./octocat.svg "http://github.com" ./out.svg')
     sys.exit(0)
 
-logoPath = sys.argv[1]
+logo_path = sys.argv[1]
 url = sys.argv[2]
 if os.path.exists(url):
     with open(url, encoding='utf-8') as infile:
         url = infile.read().rstrip()
 if len(sys.argv) < 4:
-    outputname = os.path.splitext(logoPath)[0] + '-qrcode.svg'
+    outputname = os.path.splitext(logo_path)[0] + '-qrcode.svg'
 else:
     outputname = sys.argv[3]
 
-im = generateQRImageForUrl(url);
+im = generate_qr_code(url);
 
 imageSize = str(im.size[0] * BLOCKSIZE)
 
@@ -66,12 +71,18 @@ for xPos in range(0,im.size[0]):
         color = pix[xPos, yPos]
         if color == (0,0,0,255):
 
-            withinBounds = not touchesBounds(center, xPos, yPos, RADIUS, BLOCKSIZE)
+            within_bounds = not touches_bounds(
+                center,
+                xPos,
+                yPos,
+                RADIUS,
+                BLOCKSIZE
+            )
 
-            if (withinBounds):
+            if (within_bounds):
                 etree.SubElement(doc, 'rect', x=str(xPos*BLOCKSIZE), y=str(yPos*BLOCKSIZE), width='10', height='10', fill='black')
 
-logo = getSVGFileContent(logoPath)
+logo = get_svg_content(logo_path)
 
 test = str(logo.get("viewBox"))
 Array = []
@@ -104,8 +115,8 @@ for element in logo.getchildren():
 
 # ElementTree 1.2 doesn't write the SVG file header errata, so do that manually
 f = open(outputname, 'wb')
-f.write(b'<?xml version=\"1.0\" standalone=\"no\"?>\n')
-f.write(b'<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"\n')
-f.write(b'\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n')
+f.write(b'<?xml version="1.0" standalone="no"?>\n')
+f.write(b'<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n')
+f.write(b'"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n')
 f.write(etree.tostring(doc))
 f.close()
