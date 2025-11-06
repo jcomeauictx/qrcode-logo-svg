@@ -8,6 +8,7 @@ all: $(QRCODES)
 	cd bikeshare && $(MAKE) all
 %-qrcode.svg: generate.py pyqrcode.py %.svg %.link
 	$(PYTHON) $(filter-out pyqrcode.py, $+)
+	display $@
 %.pylint: %.py
 	$(PYLINT) $<
 pylint: $(SCRIPTS)
