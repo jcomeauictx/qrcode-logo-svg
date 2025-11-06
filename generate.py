@@ -54,24 +54,30 @@ def qr_code_with_logo(logo_path, url, outfile_name=None):
     logging.debug('generating QR code logo file "%s" and url "%s"',
                   logo_path, url)
     im = generate_qr_code(url);
-    imageSize = str(im.size[0] * BLOCKSIZE)
+    image_size = str(im.size[0] * BLOCKSIZE)
     # create an SVG XML element (see the SVG specification for attribute details)
-    doc = etree.Element('svg', width=imageSize, height=imageSize, version='1.1', xmlns='http://www.w3.org/2000/svg')
+    doc = etree.Element(
+        'svg',
+        width=image_size,
+        height=image_size,
+        version='1.1',
+        xmlns='http://www.w3.org/2000/svg'
+    )
     pix = im.load()
     center = im.size[0] * BLOCKSIZE / 2
-    for xPos in range(0,im.size[0]):
-        for yPos in range(0, im.size[1]):
-            color = pix[xPos, yPos]
+    for x_position in range(0,im.size[0]):
+        for y_position in range(0, im.size[1]):
+            color = pix[x_position, y_position]
             if color == (0,0,0,255):
                 within_bounds = not touches_bounds(
                     center,
-                    xPos,
-                    yPos,
+                    x_position,
+                    y_position,
                     RADIUS,
                     BLOCKSIZE
                 )
                 if (within_bounds):
-                    etree.SubElement(doc, 'rect', x=str(xPos*BLOCKSIZE), y=str(yPos*BLOCKSIZE), width='10', height='10', fill='black')
+                    etree.SubElement(doc, 'rect', x=str(x_position*BLOCKSIZE), y=str(y_position*BLOCKSIZE), width='10', height='10', fill='black')
     logo = get_svg_content(logo_path)
     test = str(logo.get("viewBox"))
     Array = []
