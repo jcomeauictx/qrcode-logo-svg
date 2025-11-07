@@ -121,12 +121,18 @@ def qr_code_with_logo(logo_path, url, outfile_name=None):
     )
     for element in logo.getchildren():
         logo_scale_container.append(element)
-    # ElementTree 1.2 doesn't write the SVG file header errata, so do that manually
-    with open(outfile_name, 'wb') as outfile:
+    write_out(outfile_name, doc)
+
+def write_out(filename, tree):
+    '''
+    ElementTree 1.2 doesn't write the SVG file header errata,
+    so do that manually
+    '''
+    with open(filename, 'wb') as outfile:
         outfile.write(b'<?xml version="1.0" standalone="no"?>\n')
         outfile.write(b'<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n')
         outfile.write(b'"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n')
-        outfile.write(etree.tostring(doc))
+        outfile.write(etree.tostring(tree))
 
 if __name__ == '__main__':
     if len(sys.argv) >= 3:
