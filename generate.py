@@ -9,11 +9,17 @@ BLOCKSIZE = 10
 RADIUS = BLOCKSIZE * 4
 
 def distance(p0, p1):
+    '''
+    distance between two points
+    '''
     result = math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
     logging.debug('distance between %r and %r: %s', p0, p1, result)
     return result
 
 def generate_qr_code(url):
+    '''
+    get "raw" QR code for URL, to which we will later add the logo (icon)
+    '''
     logging.debug('generating QR code for "%s" without icon', url)
     qr_image = pyqrcode.MakeQRImage(
         url,
@@ -37,6 +43,9 @@ def get_svg_content(filename):
     return svg
 
 def touches_bounds(center, x, y, radius=RADIUS, block_size=BLOCKSIZE):
+    '''
+    make sure point (x, y) is in the empty space of the QR code
+    '''
     scaled_center = center / block_size
     dis = distance((scaled_center , scaled_center), (x, y))
     rad = radius / block_size
@@ -46,6 +55,7 @@ def qr_code_with_logo(logo_path, url, outfile_name=None):
     '''
     generate QR code with logo included
     '''
+    # pylint: disable=consider-using-f-string, c-extension-no-member
     if os.path.exists(url):
         with open(url, encoding='utf-8') as infile:
             url = infile.read().rstrip()
@@ -88,24 +98,24 @@ def qr_code_with_logo(logo_path, url, outfile_name=None):
     else :
         width = float(str(logo.get("width")).replace("px", ""))
         height = float(str(logo.get("height")).replace("px", ""))
-    dim = height
-    if (width > dim):
-        dim = width
     scale = RADIUS * 2.0 / width
     scale_str = 'scale(%s)' % scale
     x_translate = ((qr_code.size[0] * BLOCKSIZE) - (width * scale)) / 2.0
     y_translate = ((qr_code.size[1] * BLOCKSIZE) - (height * scale)) / 2.0
     translate = 'translate(%s %s)' % (x_translate, y_translate)
-    logo_scale_container = etree.SubElement(doc, 'g', transform=translate + " " + scale_str)
+    logo_scale_container = etree.SubElement(
+        doc,
+        'g',
+        transform=translate + " " + scale_str
+    )
     for element in logo.getchildren():
         logo_scale_container.append(element)
     # ElementTree 1.2 doesn't write the SVG file header errata, so do that manually
-    f = open(outfile_name, 'wb')
-    f.write(b'<?xml version="1.0" standalone="no"?>\n')
-    f.write(b'<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n')
-    f.write(b'"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n')
-    f.write(etree.tostring(doc))
-    f.close()
+    with open(outfile_name, 'wb') as outfile:
+        outfile.write(b'<?xml version="1.0" standalone="no"?>\n')
+        outfile.write(b'<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n')
+        outfile.write(b'"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n')
+        outfile.write(etree.tostring(doc))
 
 if __name__ == '__main__':
     if len(sys.argv) >= 3:
