@@ -68,7 +68,7 @@ def qr_code_with_logo(logo_path, url, outfile_name=None):
                   logo_path, url)
     qr_code = generate_qr_code(url)
     image_size = str(qr_code.size[0] * BLOCKSIZE)
-    doc = newtree(image_size)
+    logo_qr_code = newtree(image_size)
     pixels = qr_code.load()
     center = qr_code.size[0] * BLOCKSIZE / 2
     for x_position in range(0, qr_code.size[0]):
@@ -84,7 +84,7 @@ def qr_code_with_logo(logo_path, url, outfile_name=None):
                 )
                 if within_bounds:
                     etree.SubElement(
-                        doc,
+                        logo_qr_code,
                         'rect',
                         x=str(x_position*BLOCKSIZE),
                         y=str(y_position*BLOCKSIZE),
@@ -108,19 +108,20 @@ def qr_code_with_logo(logo_path, url, outfile_name=None):
     y_translate = ((qr_code.size[1] * BLOCKSIZE) - (height * scale)) / 2.0
     translate = 'translate(%s %s)' % (x_translate, y_translate)
     logo_scale_container = etree.SubElement(
-        doc,
+        logo_qr_code,
         'g',
         transform=translate + " " + scale_str
     )
     for element in logo.getchildren():
         logo_scale_container.append(element)
-    write_out(outfile_name, doc)
+    write_out(outfile_name, logo_qr_code)
 
 def write_out(filename, tree):
     '''
     ElementTree 1.2 doesn't write the SVG file header errata,
     so do that manually
     '''
+    # pylint: disable=c-extension-no-member
     with open(filename, 'wb') as outfile:
         outfile.write(b'<?xml version="1.0" standalone="no"?>\n')
         outfile.write(b'<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n')
@@ -132,6 +133,7 @@ def newtree(size):
     create an SVG XML element (see the SVG specification for attribute details)
     to house the combined URL QR code and the logo in the middle
     '''
+    # pylint: disable=c-extension-no-member
     return etree.Element(
         'svg',
         width=size,
