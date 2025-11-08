@@ -9,6 +9,8 @@ logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
 
 BLOCKSIZE = 10
 RADIUS = BLOCKSIZE * 4
+OPAQUE = 255
+BLACK = (0, 0, 0, OPAQUE)
 
 def distance(p0, p1):
     '''
@@ -71,10 +73,11 @@ def qr_code_with_logo(logo_path, url, outfile_name=None):
     logo_qr_code = newtree(image_size)
     pixels = qr_code.load()
     center = qr_code.size[0] * BLOCKSIZE / 2
+    logging.debug("qr_code.size: %r, center: %s", qr_code.size, center)
     for x_position in range(0, qr_code.size[0]):
         for y_position in range(0, qr_code.size[1]):
             color = pixels[x_position, y_position]
-            if color == (0,0,0,255):
+            if color == BLACK:
                 within_bounds = not touches_bounds(
                     center,
                     x_position,
@@ -93,10 +96,11 @@ def qr_code_with_logo(logo_path, url, outfile_name=None):
                         fill='black'
                     )
     logo = get_svg_content(logo_path)
-    test = str(logo.get("viewBox"))
+    view_box = str(logo.get("viewBox"))
+    logging.debug('view_box: %s', view_box)
     array = []
-    if test != "None":
-        array = test.split(" ")
+    if view_box != "None":
+        array = view_box.split(" ")
         width = float(array[2])
         height = float(array[3])
     else :
