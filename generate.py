@@ -121,6 +121,21 @@ def image_to_svg(image, blocksize=BLOCKSIZE, radius=RADIUS,
                     )
     return qrcode
 
+def get_viewbox(logo):
+    '''
+    return x offset, y offset, width, and height of image
+    '''
+    view_box = str(logo.get("viewBox"))
+    logging.debug('view_box from logo["view_box"]: %s', view_box)
+    if view_box != "None":
+        view_box = tuple(map(float, view_box.split(" ")))
+    else :
+        width = float(logo.get("width").replace("px", ""))
+        height = float(logo.get("height").replace("px", ""))
+        view_box = (0, 0, width, height)
+    logging.debug('final view_box: %r', view_box)
+    return view_box
+
 def qr_code_with_logo(logo_path, url, outfile_name=None, blocksize=BLOCKSIZE,
         radius=RADIUS):
     '''
@@ -147,16 +162,9 @@ def qr_code_with_logo(logo_path, url, outfile_name=None, blocksize=BLOCKSIZE,
         )
     logo_qr_code = image_to_svg(qr_code, blocksize, radius)
     logo = get_svg_content(logo_path)
-    view_box = str(logo.get("viewBox"))
-    logging.debug('view_box: %s', view_box)
-    array = []
-    if view_box != "None":
-        array = view_box.split(" ")
-        width = float(array[2])
-        height = float(array[3])
-    else :
-        width = float(str(logo.get("width")).replace("px", ""))
-        height = float(str(logo.get("height")).replace("px", ""))
+    x_offset, y_offset, width, height = get_viewbox(logo)
+    logging.debug('x_offset=%s, y_offset=%s, width=%s, height=%s',
+                  x_offset, y_offset, width, height)
     scale = radius * 2.0 / width
     x_translate = ((qr_code.size[0] * blocksize) - (width * scale)) / 2.0
     y_translate = ((qr_code.size[1] * blocksize) - (height * scale)) / 2.0
