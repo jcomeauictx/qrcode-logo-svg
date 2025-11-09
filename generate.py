@@ -136,6 +136,30 @@ def get_viewbox(logo):
     logging.debug('final view_box: %r', view_box)
     return view_box
 
+def paste_logo(qr_code, logo_path, blocksize=BLOCKSIZE, radius=RADIUS):
+    '''
+    paste logo into middle of logo_qr_code
+    '''
+    # pylint: disable=c-extension-no-member, consider-using-f-string
+    logo_qr_code = image_to_svg(qr_code)
+    logo = get_svg_content(logo_path)
+    x_offset, y_offset, width, height = get_viewbox(logo)
+    logging.debug('x_offset=%s, y_offset=%s, width=%s, height=%s',
+                  x_offset, y_offset, width, height)
+    scale = radius * 2.0 / width
+    x_translate = ((qr_code.size[0] * blocksize) - (width * scale)) / 2.0
+    y_translate = ((qr_code.size[1] * blocksize) - (height * scale)) / 2.0
+    transform = 'translate(%s %s)' % (x_translate, y_translate)
+    transform += ' scale(%s)' % scale
+    logo_scale_container = etree.SubElement(
+        logo_qr_code,
+        'g',
+        transform=transform
+    )
+    for element in logo.getchildren():
+        logo_scale_container.append(element)
+    return logo_qr_code
+
 def qr_code_with_logo(logo_path, url, outfile_name=None, blocksize=BLOCKSIZE,
         radius=RADIUS):
     '''
@@ -160,22 +184,7 @@ def qr_code_with_logo(logo_path, url, outfile_name=None, blocksize=BLOCKSIZE,
             ),
             image_to_svg(qr_code, blocksize, radius, for_logo=False)
         )
-    logo_qr_code = image_to_svg(qr_code, blocksize, radius)
-    logo = get_svg_content(logo_path)
-    x_offset, y_offset, width, height = get_viewbox(logo)
-    logging.debug('x_offset=%s, y_offset=%s, width=%s, height=%s',
-                  x_offset, y_offset, width, height)
-    scale = radius * 2.0 / width
-    x_translate = ((qr_code.size[0] * blocksize) - (width * scale)) / 2.0
-    y_translate = ((qr_code.size[1] * blocksize) - (height * scale)) / 2.0
-    translate = 'translate(%s %s)' % (x_translate, y_translate)
-    logo_scale_container = etree.SubElement(
-        logo_qr_code,
-        'g',
-        transform=translate + ' scale(%s)' % scale
-    )
-    for element in logo.getchildren():
-        logo_scale_container.append(element)
+    logo_qr_code = paste_logo(qr_code, logo_path, blocksize, radius)
     write_out(outfile_name, logo_qr_code)
 
 if __name__ == '__main__':
