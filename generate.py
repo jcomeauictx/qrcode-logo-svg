@@ -2,6 +2,7 @@
 '''
 make QR code with logo (icon) in the middle
 '''
+from __future__ import print_function, division
 import math, sys, os, logging  # pylint: disable=multiple-imports
 from tempfile import gettempdir
 from xml.etree import ElementTree as etree
@@ -12,6 +13,12 @@ BLOCKSIZE = 10
 RADIUS = BLOCKSIZE * 4
 OPAQUE = 255
 BLACK = (0, 0, 0, OPAQUE)
+# python2 compatibility
+try:
+    with open(sys.argv[0], encoding='utf-8') as test:
+        ENCODING={'encoding': 'utf-8'}
+except TypeError:
+    ENCODING={}
 
 def distance(p0, p1):
     '''
@@ -172,7 +179,7 @@ def qr_code_with_logo(logo_path, url, outfile_name=None, blocksize=BLOCKSIZE,
     directory, filename = os.path.split(logo_path)
     file_prefix = os.path.splitext(filename)[0]
     if os.path.exists(url):
-        with open(url, encoding='utf-8') as infile:
+        with open(url, **ENCODING) as infile:
             url = infile.read().rstrip()
     if not outfile_name:
         outfile_name = os.path.join(directory, file_prefix + '-qrcode.svg')
