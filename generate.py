@@ -2,7 +2,7 @@
 '''
 make QR code with logo (icon) in the middle
 '''
-from __future__ import print_function, division
+from __future__ import print_function
 import math, sys, os, logging  # pylint: disable=multiple-imports
 from tempfile import gettempdir
 from xml.etree import ElementTree as etree
