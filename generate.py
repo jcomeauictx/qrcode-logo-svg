@@ -3,6 +3,7 @@
 make QR code with logo (icon) in the middle
 '''
 import math, sys, os, logging  # pylint: disable=multiple-imports
+from tempfile import gettempdir
 from lxml import etree
 import pyqrcode
 logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
@@ -47,35 +48,46 @@ def get_svg_content(filename):
     logging.debug('svg: %s', svg)
     return svg
 
-def touches_bounds(center, x, y, radius=RADIUS, block_size=BLOCKSIZE):
+def touches_bounds(center, x, y, radius=RADIUS, blocksize=BLOCKSIZE):
     '''
     make sure point (x, y) is in the empty space of the QR code
     '''
-    scaled_center = center / block_size
+    scaled_center = center / blocksize
     dis = distance((scaled_center , scaled_center), (x, y))
-    rad = radius / block_size
+    rad = radius / blocksize
     return dis <= rad + 1
 
-def qr_code_with_logo(logo_path, url, outfile_name=None):
+def qr_code_with_logo(logo_path, url, outfile_name=None, blocksize=BLOCKSIZE,
+        radius=RADIUS):
     '''
     generate QR code with logo included
     '''
     # pylint: disable=consider-using-f-string, c-extension-no-member
+    directory, filename = os.path.split(logo_path)
+    file_prefix = os.path.splitext(filename)[0]
     if os.path.exists(url):
         with open(url, encoding='utf-8') as infile:
             url = infile.read().rstrip()
-    if outfile_name is None:
-        outfile_name = os.path.splitext(logo_path)[0] + '-qrcode.svg'
+    if not outfile_name:
+        outfile_name = os.path.join(directory, file_prefix + '-qrcode.svg')
     logging.debug('generating QR code logo file "%s" and url "%s"',
                   logo_path, url)
     qr_code = generate_qr_code(url)
+    if __debug__:
+        write_out(
+            os.path.join(
+                gettempdir(),
+                file_prefix + '-qrcode-plain.svg'
+            ),
+            qr_code
+        )
     x_size, y_size = qr_code.size
     if x_size != y_size:
         raise ValueError('QR code not square: x=%s, y=%s' % (x_size, y_size))
-    pixel_size = str(x_size * BLOCKSIZE)
+    pixel_size = str(x_size * blocksize)
     logo_qr_code = newtree(pixel_size)
     pixels = qr_code.load()
-    center = qr_code.size[0] * BLOCKSIZE / 2
+    center = qr_code.size[0] * blocksize / 2
     logging.debug("qr_code.size: %s, center: %s", pixel_size, center)
     for x_position in range(0, x_size):
         for y_position in range(0, y_size):
@@ -85,15 +97,15 @@ def qr_code_with_logo(logo_path, url, outfile_name=None):
                     center,
                     x_position,
                     y_position,
-                    RADIUS,
-                    BLOCKSIZE
+                    radius,
+                    blocksize
                 )
                 if within_bounds:
                     etree.SubElement(
                         logo_qr_code,
                         'rect',
-                        x=str(x_position*BLOCKSIZE),
-                        y=str(y_position*BLOCKSIZE),
+                        x=str(x_position*blocksize),
+                        y=str(y_position*blocksize),
                         width='10',
                         height='10',
                         fill='black'
@@ -109,10 +121,10 @@ def qr_code_with_logo(logo_path, url, outfile_name=None):
     else :
         width = float(str(logo.get("width")).replace("px", ""))
         height = float(str(logo.get("height")).replace("px", ""))
-    scale = RADIUS * 2.0 / width
+    scale = radius * 2.0 / width
     scale_str = 'scale(%s)' % scale
-    x_translate = ((qr_code.size[0] * BLOCKSIZE) - (width * scale)) / 2.0
-    y_translate = ((qr_code.size[1] * BLOCKSIZE) - (height * scale)) / 2.0
+    x_translate = ((qr_code.size[0] * blocksize) - (width * scale)) / 2.0
+    y_translate = ((qr_code.size[1] * blocksize) - (height * scale)) / 2.0
     translate = 'translate(%s %s)' % (x_translate, y_translate)
     logo_scale_container = etree.SubElement(
         logo_qr_code,
