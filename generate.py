@@ -4,7 +4,7 @@ make QR code with logo (icon) in the middle
 '''
 import math, sys, os, logging  # pylint: disable=multiple-imports
 from tempfile import gettempdir
-from lxml import etree
+from xml.etree import ElementTree as etree
 import pyqrcode
 logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
 
@@ -44,7 +44,7 @@ def get_svg_content(filename):
     # pylint: disable=c-extension-no-member
     document = etree.parse(filename)
     logging.debug('document: %s', document)
-    svg = document.xpath('//*[local-name()="svg"]')[0]
+    svg = document.find('svg') or document.getroot()
     logging.debug('svg: %s', svg)
     return svg
 
@@ -158,7 +158,8 @@ def paste_logo(qr_code, logo_path, blocksize=BLOCKSIZE, radius=RADIUS):
         'g',
         transform=transform
     )
-    for element in logo.getchildren():
+    logging.debug('logo subelements: %s', logo.find('.'))
+    for element in logo.find('.'):
         logo_scale_container.append(element)
     return logo_qr_code
 
