@@ -2,7 +2,7 @@
 '''
 make QR code with logo (icon) in the middle
 '''
-from __future__ import print_function
+from __future__ import print_function, division
 import math, sys, os, logging  # pylint: disable=multiple-imports
 from tempfile import gettempdir
 from xml.etree import ElementTree as etree
@@ -59,9 +59,9 @@ def touches_bounds(center, x, y, radius=RADIUS, blocksize=BLOCKSIZE):
     '''
     make sure point (x, y) is in the empty space of the QR code
     '''
-    scaled_center = center / blocksize
+    scaled_center = center // blocksize
     dis = distance((scaled_center , scaled_center), (x, y))
-    rad = radius / blocksize
+    rad = radius // blocksize
     return dis <= rad + 1
 
 def write_out(filename, tree):
