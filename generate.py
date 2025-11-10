@@ -66,8 +66,7 @@ def touches_bounds(center, x, y, radius=RADIUS, blocksize=BLOCKSIZE):
 
 def write_out(filename, tree):
     '''
-    ElementTree 1.2 doesn't write the SVG file header errata,
-    so do that manually
+    ElementTree 1.2 doesn't write the SVG file header, so do that manually
     '''
     # pylint: disable=c-extension-no-member
     with open(filename, 'wb') as outfile:
@@ -151,12 +150,13 @@ def paste_logo(qr_code, logo_path, blocksize=BLOCKSIZE, radius=RADIUS):
     logo_qr_code = image_to_svg(qr_code)
     logo = get_svg_content(logo_path)
     x_offset, y_offset, width, height = get_viewbox(logo)
+    side = max(width, height)
     logging.debug('x_offset=%s, y_offset=%s, width=%s, height=%s',
                   x_offset, y_offset, width, height)
-    scale = radius * 2.0 / width
+    scale = radius * 2.0 / side
     transform = 'translate(%s %s)' % (
-        ((qr_code.size[0] * blocksize) - (width * scale)) / 2.0,
-        ((qr_code.size[1] * blocksize) - (height * scale)) / 2.0
+        ((qr_code.size[0] * blocksize) - ((x_offset + width) * scale)) / 2.0,
+        ((qr_code.size[1] * blocksize) - ((y_offset + height) * scale)) / 2.0
     )
     transform += ' scale(%s)' % scale
     logging.debug('transform: %s', transform)
